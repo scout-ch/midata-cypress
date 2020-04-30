@@ -1,0 +1,78 @@
+version: '3.4'
+
+services:
+  app: &app
+    build:
+      context: .compose
+      target: app
+    ports:
+      - 3000:3000
+    depends_on:
+      - db
+      - mail
+      - cache
+      - worker
+    env_file: .compose/app/.env
+    tmpfs: /app/hitobito/tmp/pids
+    volumes:
+      - seed:/seed
+      - ./cypress/app_commands:/app/hitobito/spec/cypress/app_commands
+      - ./cypress/cypress_helper.rb:/app/hitobito/spec/cypress/cypress_helper.rb
+      - ./.compose/cypress/config/initializers/cypress_on_rails.rb:/app/hitobito/config/initializers/cypress_on_rails.rb
+
+  worker:
+    <<: *app
+    build:
+      context: .compose
+      target: worker
+    ports: []
+    depends_on:
+    - db
+    - mail
+    - cache
+      
+  cypress: &cypress
+    image: cypress/included:4.5.0
+    working_dir: /e2e
+    environment:
+      - CYPRESS_BASE_URL=http://app:3000
+    volumes:
+      - ./cypress:/e2e/cypress
+      - ./cypress.json:/e2e/cypress.json
+      - .compose/cypress/entrypoint:/bin/entrypoint
+      - /tmp/.X11-unix:/tmp/.X11-unix:rw # For running in Docker on Linux
+    depends_on:
+      - app
+    entrypoint: 
+      - /bin/entrypoint
+    command: ["run", "--project", ".", "--browser", "chrome"]
+
+  cypress-gui:
+    <<: *cypress
+    command: ["open", "--project", "."]
+    environment:
+      - DISPLAY
+      - CYPRESS_BASE_URL=http://app:3000
+
+  # Dependencies
+
+  mail:
+    image: mailhog/mailhog
+    ports:
+      - "1080:8025"
+
+  cache:
+    image: memcached:1.5-alpine
+    command: [ memcached, -l, '0.0.0.0', -p, '11211' ]
+
+  db:
+    image: mysql:5.6
+    command:
+    - --sort_buffer_size=2M
+    env_file: .compose/db/.env
+    volumes:
+      - db:/var/lib/mysql
+    
+volumes:
+  db:
+  seed:

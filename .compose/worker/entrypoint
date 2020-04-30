@@ -1,0 +1,11 @@
+#!/bin/bash
+
+set -e
+
+echo "⚙️ Testing DB connection"
+timeout 300s /bin/waitfortcp "${RAILS_DB_HOST-db}" "${RAILS_DB_PORT-3306}"
+echo "✅ DB is ready"
+
+echo "➡️ Handing control over to '$*''"
+
+exec bundle exec "$@"
