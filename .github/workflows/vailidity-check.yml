@@ -12,5 +12,5 @@ jobs:
     - uses: actions/checkout@v2
     - name: Run cypress
       run: docker-compose run cypress
-    -name: Clean up docker
+    - name: Clean up docker
       run docker-compose down
