@@ -1,6 +1,8 @@
 name: Validity Check
 on:
-  push
+  push:
+  pull_request:
+    branches: [ master ]
 
 jobs:
   build:
@@ -11,4 +13,4 @@ jobs:
     - name: Run cypress
       run: docker-compose run cypress
     - name: Clean up docker
-      run docker-compose down
+      run: docker-compose down
