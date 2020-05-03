@@ -1,6 +1,5 @@
 name: Check PR
 on:
-  push:
   pull_request:
     branches: [ master ]
 
@@ -17,5 +16,5 @@ jobs:
       with:
         wait-on: 'http://localhost:3000'
         wait-on-timeout: 600
-    - name: Clean up docker
+    - name: Stop hitobito
       run: docker-compose down
