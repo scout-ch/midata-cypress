@@ -1,0 +1,51 @@
+name: E2E tests
+
+on:
+  push:
+    branches: 
+      - master
+    tags:
+
+# A workflow run is made up of one or more jobs that can run sequentially or in parallel
+jobs:
+  tests:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v2
+      - name: Log into registry
+        run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login docker.pkg.github.com -u ${{ github.actor }} --password-stdin
+      - name: Pull images
+        run: docker-compose pull --include-deps --quiet cypress
+      - name: Start hitobito
+        run: docker-compose up -d app
+      - name: Run cypress
+        uses: cypress-io/github-action@v1
+        with:
+          wait-on: 'http://localhost:3000'
+          wait-on-timeout: 600
+          record: true
+        env:
+          # pass the Dashboard record key as an environment variable
+          CYPRESS_RECORD_KEY: ${{ secrets.CYPRESS_RECORD_KEY }}
+      - name: Stop hitobito
+        run: docker-compose down
+      # after the test run completes
+      # store videos and any screenshots
+      # NOTE: screenshots will be generated only if E2E test failed
+      # thus we store screenshots only on failures
+      # Alternative: create and commit an empty cypress/screenshots folder
+      # to always have something to upload
+      - name: Upload screenshots
+        uses: actions/upload-artifact@v2
+        if: failure()
+        with:
+          name: Screenshots
+          path: cypress/screenshots
+      # Test run video was always captured, so this action uses "always()" condition
+      - name: Upload videos
+        uses: actions/upload-artifact@v2
+        if: always()
+        with:
+          name: Videos
+          path: cypress/videos      
