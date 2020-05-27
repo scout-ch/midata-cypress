@@ -20,8 +20,8 @@ jobs:
 
       - name: Build image
         run: |
-          docker build . --file Dockerfile -target app --tag $APP_IMAGE_NAME
-          docker build . --file Dockerfile -target worker --tag $WORKER_IMAGE_NAME
+          docker build .compose --file .compose/Dockerfile --target app --tag $APP_IMAGE_NAME
+          docker build .compose --file .compose/Dockerfile --target worker --tag $WORKER_IMAGE_NAME
 
       - name: Log into registry
         run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login docker.pkg.github.com -u ${{ github.actor }} --password-stdin
