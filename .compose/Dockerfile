@@ -1,4 +1,4 @@
-FROM ruby:2.5 as base
+FROM ruby:2.5.5 as base
 ENV RAILS_ENV=development
 ENTRYPOINT [ "/bin/entrypoint" ]
 COPY ./app/waitfortcp /bin
