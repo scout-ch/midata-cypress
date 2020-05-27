@@ -22,6 +22,7 @@ jobs:
         wait-on: 'http://localhost:3000'
         wait-on-timeout: 600
     - name: Stop hitobito
+      if: always()
       run: docker-compose down
     # after the test run completes
     # store videos and any screenshots
