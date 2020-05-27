@@ -9,12 +9,16 @@ RUN apt-get update && apt-get install -y \
     imagemagick \
  && rm -rf /var/lib/apt/lists/*
 
+ARG hitobito_branch=master
+ARG hitobito_youth_branch=master
+ARG hitobito_pbs_branch=master
+
 RUN git clone https://github.com/hitobito/hitobito.git && \
   git clone https://github.com/hitobito/hitobito_youth.git && \
   git clone https://github.com/hitobito/hitobito_pbs.git && \
-  cd hitobito && git checkout rails-5 && cd ../ && \
-  cd hitobito_youth && git checkout rails-5 && cd ../ && \
-  cd hitobito_pbs && git checkout rails-5
+  cd hitobito && git checkout $hitobito_branch && cd ../ && \
+  cd hitobito_youth && git checkout $hitobito_youth_branch && cd ../ && \
+  cd hitobito_pbs && git checkout $hitobito_pbs_branch
 
 
 WORKDIR /app/hitobito
