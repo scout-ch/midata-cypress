@@ -18,7 +18,7 @@ jobs:
     steps:
       - uses: actions/checkout@v2
 
-      - name: Build image
+      - name: Build images
         run: |
           docker build .compose --file .compose/Dockerfile --target app --tag $APP_IMAGE_NAME
           docker build .compose --file .compose/Dockerfile --target worker --tag $WORKER_IMAGE_NAME
@@ -26,7 +26,7 @@ jobs:
       - name: Log into registry
         run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login docker.pkg.github.com -u ${{ github.actor }} --password-stdin
 
-      - name: Push image
+      - name: Push images
         run: |
           APP_IMAGE_ID=docker.pkg.github.com/${{ github.repository }}/$APP_IMAGE_NAME
           WORKER_IMAGE_ID=docker.pkg.github.com/${{ github.repository }}/$WORKER_IMAGE_NAME
