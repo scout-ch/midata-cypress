@@ -23,3 +23,14 @@ jobs:
         wait-on-timeout: 600
     - name: Stop hitobito
       run: docker-compose down
+    - name: Upload screenshots
+      uses: actions/upload-artifact@v2
+      with:
+        name: Screenshots
+        path: cypress/screenshots/
+    - name: Upload videos
+      uses: actions/upload-artifact@v2
+      with:
+        name: Videos
+        path: cypress/videos/
+      
