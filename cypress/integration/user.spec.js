@@ -32,7 +32,7 @@ describe('The user', function () {
 
     cy.get('form#new_role button[type="submit"]:first').click()
 
-    cy.contains("Rolle Geschäftsleiter für Marlies Sauerkraut / Brexit in Pfadibewegung Schweiz wurde erfolgreich erstellt.")
+    cy.contains("Rolle Geschäftsleiter*in für Marlies Sauerkraut / Brexit in Pfadibewegung Schweiz wurde erfolgreich erstellt.")
   })
   it('can still add a new person, even with the same email', function () {
     cy.visit('/de/groups/1/roles/new')
@@ -53,6 +53,6 @@ describe('The user', function () {
 
     cy.get('form#new_role button[type="submit"]:first').click()
 
-    cy.contains("Rolle Geschäftsleiter für Marlies Sauerkraut / Brexit in Pfadibewegung Schweiz wurde erfolgreich erstellt.")
+    cy.contains("Rolle Geschäftsleiter*in für Marlies Sauerkraut / Brexit in Pfadibewegung Schweiz wurde erfolgreich erstellt.")
   })
 })

@@ -13,7 +13,7 @@ jobs:
     - name: Log into registry
       run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login docker.pkg.github.com -u ${{ github.actor }} --password-stdin
     - name: Pull images
-      run: docker-compose pull --include-deps --quiet cypress
+      run: docker-compose pull --include-deps --quiet app
     - name: Start hitobito
       run: docker-compose up -d app
     - name: Run cypress
