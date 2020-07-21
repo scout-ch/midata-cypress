@@ -29,22 +29,22 @@ export const bern_leitpfadikurs = {
   id: 84
 }
 
-export const user_dicta = {
-  id: 510,
-  first_name: 'Lotta',
-  last_name: 'Feld',
-  nickname: 'Dicta',
+export const user_in = {
+  id: 485,
+  first_name: 'Wilhelm',
+  last_name: 'Busch',
+  nickname: 'In',
   event: {
     id: 83,
     participation_id: 806
   }
 }
 
-export const user_ipsam = {
-  id: 469,
-  first_name: 'Jonte',
-  last_name: 'Haug',
-  nickname: 'Ipsam'
+export const user_aliquid = {
+  id: 280,
+  first_name: 'Catharina',
+  last_name: 'Schroder',
+  nickname: 'Aliquid'
 }
 
 export const user_necessitatibus = {

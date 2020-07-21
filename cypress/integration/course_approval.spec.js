@@ -1,7 +1,7 @@
 import { register, edit } from '../pageHelpers/event.js'
 import { approve } from '../pageHelpers/pending_approvals.js'
 import { imitate, quitImitation } from '../pageHelpers/person.js'
-import { root_user, user_dicta as dicta, user_necessitatibus as necessitatibus, user_ipsam as ipsam,
+import { root_user, user_in, user_necessitatibus as necessitatibus, user_aliquid as aliquid,
          bern_leitpfadikurs, empty_approval } from '../support/constants.js'
 
 describe('Course approvals', function () {
@@ -13,31 +13,32 @@ describe('Course approvals', function () {
   it('can be issued via the UI or a request, the result is the same', function () {
     const QUERY = `begin
       Event::Approval.joins('INNER JOIN event_participations ON event_participations.application_id = event_approvals.application_id')
-        .where('event_participations.id = ${dicta.event.participation_id}').as_json(except: :approved_at)
+        .where('event_participations.id = ${user_in.event.participation_id}').as_json(except: :approved_at)
     rescue StandardError => e
       return e
     end`
 
-    cy.getEventUrl(dicta.event.id).then((res) => {
-      cy.visit(`${res.url}/participations/${dicta.event.participation_id}`)
+    cy.getEventUrl(user_in.event.id).then((res) => {
+      cy.visit(`${res.url}/participations/${user_in.event.participation_id}`)
     })
     cy.contains('Freigeben').click()
     cy.nearestInput('Tätigkeit').type('-')
     cy.nearestInput('Stufe').type('-')
-    cy.nearestInput('Wie bewährt er/sie sich dabei? z.B. Einsatz, Qualität des/der TN').type('-')
-    cy.nearestInput('Wo liegen seine/ihre Stärken?').type('-')
-    cy.nearestInput('Wo sollte man ihn/sie fördern?').type('-')
+    cy.nearestInput('Wie bewährt er*sie sich dabei? z.B. Einsatz, Qualität des*der TN').type('-')
+    cy.nearestInput('Wo liegen seine*ihre Stärken?').type('-')
+    cy.nearestInput('Wo sollte man ihn*sie fördern?').type('-')
     cy.nearestInput('Wünsche, Anregungen oder Bemerkungen an die Kursleitung').type('-')
     cy.contains('Freigeben').last().click()
 
     cy.appEval(QUERY).as('json_ui')
 
+    // TODO: apparently, Auto increment doesn't get reset?
     cy.app('clean')
     cy.app('start_transaction')
 
     cy.login(root_user.username, root_user.password)
 
-    approve(dicta.event.id, dicta.event.participation_id, empty_approval)
+    approve(user_in.event.id, user_in.event.participation_id, empty_approval)
 
     cy.appEval(QUERY).then((res) => {
       expect(this.json_ui).to.deep.equal(res)
@@ -45,9 +46,9 @@ describe('Course approvals', function () {
   })
 
   it('turn the warning badge into a success badge in the applications overview', function () {
-    const full_name = `${dicta.last_name} ${dicta.first_name} / ${dicta.nickname}`
+    const full_name = `${user_in.last_name} ${user_in.first_name} / ${user_in.nickname}`
 
-    cy.getEventUrl(dicta.event.id).then((res) => {
+    cy.getEventUrl(user_in.event.id).then((res) => {
       cy.wrap(res.url).as('event_url')
     })
 
@@ -58,7 +59,7 @@ describe('Course approvals', function () {
     cy.get(`tbody#participants tr:contains('${full_name}')`)
       .find('td:eq(3) > span').should('contain', '?').should('have.attr','title', 'Kursfreigabe ausstehend')
 
-    approve(dicta.event.id, dicta.event.participation_id, empty_approval)
+    approve(user_in.event.id, user_in.event.participation_id, empty_approval)
 
     // check the badge
     cy.get('@event_url').then((url) => {
@@ -69,7 +70,7 @@ describe('Course approvals', function () {
   })
 
   it('are indicated as missing for new participations, and as confirmed after the necessary approvals are issued', function () {
-    const full_name = `${ipsam.last_name} ${ipsam.first_name} / ${ipsam.nickname}`
+    const full_name = `${aliquid.last_name} ${aliquid.first_name} / ${aliquid.nickname}`
 
     cy.getEventUrl(bern_leitpfadikurs.id).then((res) => {
       cy.wrap(res.url).as('event_url')
@@ -86,9 +87,9 @@ describe('Course approvals', function () {
     })
 
     // imitate a person and initiate the participation
-    imitate(ipsam.id)
+    imitate(aliquid.id)
     register(bern_leitpfadikurs.id, 'Event::Course::Role::Participant')
-    quitImitation(ipsam.id)
+    quitImitation(aliquid.id)
 
     // check the badge
     cy.get('@event_url').then((url) => {
