@@ -47,7 +47,7 @@ services:
       - app
     entrypoint: 
       - /bin/entrypoint
-    command: ["run", "--project", ".", "--browser", "chrome"]
+    command: ["run", "--project", ".", "--browser", "firefox"]
 
   cypress-gui:
     <<: *cypress
