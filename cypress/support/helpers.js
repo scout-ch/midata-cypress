@@ -11,6 +11,9 @@ export const replace_empty_strings_with_null = (object) => {
       newObject[key] = value
     } else if (typeof value == "string" && value.length == 0) {
       newObject[key] = null
+    } else if (typeof value == "string" && value.includes('\r\n')) {
+      // newlines may cause problems due to encoding as either \n or \r\n
+      newObject[key] = value.replace(/\r\n/g, '\n')
     } else if (typeof value == "object") {
       newObject[key] = replace_empty_strings_with_null(value)
     } else {

@@ -1,5 +1,6 @@
 import { edit } from '../pageHelpers/event.js'
 import { root_user, jim_knopf_basiskurs as event } from '../support/constants.js'
+import { replace_empty_strings_with_null } from '../support/helpers.js'
 import { GET_COURSE } from '../support/queries.js'
 
 describe('A course', function () {
@@ -39,10 +40,11 @@ describe('A course', function () {
 
     // note: the JSON API does not return all fields, so there may still be differences
     // for example the requires_approval fields are not included
-    // also note: newlines (e.g. in location) may cause problems due to encoding as either \n or \r\n
     cy.get('@event_url').then((url) => {
       cy.request(`${url}.json`).then((response) => {
-        expect(this.json_ui.body.events).to.deep.equal(response.body.events)
+        const unified_response = replace_empty_strings_with_null(response.body.events)
+        const unified_json_ui = replace_empty_strings_with_null(this.json_ui.body.events)
+        expect(unified_response).to.deep.equal(unified_json_ui)
       })
     })
   })
