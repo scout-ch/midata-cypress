@@ -2,12 +2,9 @@ import { edit } from '../pageHelpers/event.js'
 import { root_user, jim_knopf_basiskurs as event } from '../support/constants.js'
 import { GET_COURSE } from '../support/queries.js'
 
-beforeEach(() => {
-  cy.login(root_user.username, root_user.password)
-})
-
 describe('A course', function () {
   it('can be edited via the UI or a request, the result is the same', function () {
+    cy.login(root_user.username, root_user.password)
     cy.appEval(GET_COURSE).then(res => {
       const url = `/de/groups/${res.group_id}/events/${res.event_id}`
       cy.wrap(url).as('event_url')
