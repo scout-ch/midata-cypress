@@ -1,29 +1,9 @@
 import { edit, register } from '../pageHelpers/event.js'
-import { root_user, zürich_basiskurs_pfadistufe as event } from '../support/constants.js'
+import { root_user } from '../support/constants.js'
+import { replace_empty_strings_with_null, get_reset_auto_increment_query } from '../support/helpers.js'
+import { GET_COURSE } from '../support/queries.js'
 
-const replace_empty_strings_with_null = (object) => {
-  let newObject
-  if (Array.isArray(object)) {
-    newObject = [{}]
-  } else {
-    newObject = {}
-  }
-  Object.keys(object).forEach((key) => {
-    const value = object[key]
-    if (value === null) {
-      newObject[key] = value
-    } else if (typeof value == "string" && value.length == 0) {
-      newObject[key] = null
-    } else if (typeof value == "object") {
-      newObject[key] = replace_empty_strings_with_null(value)
-    } else {
-      newObject[key] = value
-    }
-  });
-  return newObject
-}
-
-const RESET_AUTO_INCREMENT = `new_id = Event::Participation.maximum(:id).next; ActiveRecord::Base.connection.execute("ALTER TABLE event_participations AUTO_INCREMENT = #{new_id};")`
+const RESET_AUTO_INCREMENT = get_reset_auto_increment_query([ 'Event::Participation' ])
 
 describe('A course participation', function () {
   it('can be created via the UI or a request, the result is the same', function () {
@@ -32,8 +12,10 @@ describe('A course participation', function () {
     cy.app('start_transaction')
 		cy.login(root_user.username, root_user.password)
 
-    cy.getEventUrl(event.id).then((res) => {
-      cy.wrap(res.url).as('event_url')
+    cy.appEval(GET_COURSE).then(res => {
+      const url = `/de/groups/${res.group_id}/events/${res.event_id}`
+      cy.wrap(url).as('event_url')
+      cy.wrap(res.event_id).as('event_id')
     })
 
     cy.wrap({'application_opening_at': Cypress.moment().subtract(10, 'days').format('DD.MM.YYYY'),
@@ -42,7 +24,7 @@ describe('A course participation', function () {
 
     // ensure that registering is possible
     cy.get('@event_fields').then((fields) => {
-      edit(event.id, fields)
+      edit(this.event_id, fields)
     })
 
     cy.get('@event_url').then((url) => {
@@ -66,10 +48,12 @@ describe('A course participation', function () {
     cy.login(root_user.username, root_user.password)
 
     cy.get('@event_fields').then((fields) => {
-      edit(event.id, fields)
+      edit(this.event_id, fields)
     })
 
-    register(event.id, 'Event::Course::Role::Participant')
+    cy.get('@event_id').then((id) => {
+      register(id, 'Event::Course::Role::Participant')
+    })
 
     cy.get('@participation_url').then((url) => {
       cy.request(`${url}.json`).then((response) => {

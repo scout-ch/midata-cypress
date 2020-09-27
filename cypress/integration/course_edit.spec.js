@@ -1,27 +1,26 @@
 import { edit } from '../pageHelpers/event.js'
-import { root_user, unspunne_sicherheitsmodul_wasser as event } from '../support/constants.js'
+import { root_user, jim_knopf_basiskurs as event } from '../support/constants.js'
+import { GET_COURSE } from '../support/queries.js'
+
+beforeEach(() => {
+  cy.login(root_user.username, root_user.password)
+})
 
 describe('A course', function () {
-
-  beforeEach(() => {
-		cy.login(root_user.username, root_user.password)
-	})
-
   it('can be edited via the UI or a request, the result is the same', function () {
-    cy.getEventUrl(event.id).then((res) => {
-      cy.wrap(res.url).as('event_url')
-    })
-
-    cy.get('@event_url').then((url) => {
+    cy.appEval(GET_COURSE).then(res => {
+      const url = `/de/groups/${res.group_id}/events/${res.event_id}`
+      cy.wrap(url).as('event_url')
+      cy.wrap(res.event_id).as('event_id')
       cy.visit(`${url}/edit`)
     })
-    cy.nearestInput('Name').focus().clear().type(event.fields['name'])
-    cy.nearestInput('Ort / Adresse').focus().clear().type(event.fields['location'])
+
+    cy.nearestInput('Ort / Adresse').focus().clear().type(event.additional_fields['location'])
     cy.nearestInput('Status').select('Offen zur Anmeldung')
-    cy.nearestInput('Motto').focus().clear().type(event.fields['motto'])
+    cy.nearestInput('Motto').focus().clear().type(event.additional_fields['motto'])
     cy.get('.nav-tabs').contains('Anmeldung').click()
-    cy.nearestInput('Anmeldebeginn').focus().clear().type(event.fields['application_opening_at'])
-    cy.nearestInput('Anmeldeschluss').focus().clear().type(event.fields['application_closing_at'])
+    cy.nearestInput('Anmeldebeginn').focus().clear().type(event.additional_fields['application_opening_at'])
+    cy.nearestInput('Anmeldeschluss').focus().clear().type(event.additional_fields['application_closing_at'])
     cy.nearestCheckbox('Empfehlung der Anmeldungen nötig durch', 'Abteilung').uncheck()
     cy.nearestCheckbox('Empfehlung der Anmeldungen nötig durch', 'Region').check()
     cy.nearestCheckbox('Empfehlung der Anmeldungen nötig durch', 'Kantonalverband').check()
@@ -37,7 +36,9 @@ describe('A course', function () {
 
     cy.login(root_user.username, root_user.password)
 
-    edit(event.id, event.fields)
+    cy.get('@event_id').then((id) => {
+      edit(id, event.additional_fields)
+    })
 
     // note: the JSON API does not return all fields, so there may still be differences
     // for example the requires_approval fields are not included

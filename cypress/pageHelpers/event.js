@@ -1,18 +1,42 @@
 export const register = (eventID, role) => {
-  cy.getEventUrl(eventID).then(res => {
+  return new Cypress.Promise((resolve, reject) => {
+    cy.getEventUrl(eventID).then(res => {
+      cy.getCSRFToken().then(token => {
+        let post_data = {'event_role[type]': role,
+          'event_participation[additional_information]': ''}
+        post_data.authenticity_token = token
+        cy.request({
+          url: `${res.url}/participations`,
+          method: 'POST',
+          form: true,
+          followRedirect: false,
+          body: post_data
+        }).then(res => {
+          let participationId = res.redirectedToUrl.match(/de\/groups\/\d+\/events\/\d+\/participations\/(\d+)/)[1]
+          resolve(participationId)
+        })
+      })
+    })
+  })
+}
+
+export const create = (groupID, payload) => {
+  return new Cypress.Promise((resolve, reject) => {
     cy.getCSRFToken().then(token => {
-      let post_data = {'event_role[type]': role,
-        'event_participation[additional_information]': ''}
+      let post_data = {}
+      Object.keys(payload).forEach(key => {
+        post_data[`event[${key}]`] = payload[key]
+      })
       post_data.authenticity_token = token
-      cy.request({
-        url: `${res.url}/participations`,
+      const id = cy.request({
+        url: `/de/groups/${groupID}/events`,
         method: 'POST',
         form: true,
-        followRedirect: false,
-        body: post_data
+        body: post_data,
+        followRedirect: false
       }).then(res => {
-        let participationId = res.redirectedToUrl.match(/de\/groups\/\d+\/events\/\d+\/participations\/(\d+)/)[1]
-        cy.wrap({ url: res.redirectedToUrl, id: participationId}).as('participation')
+        const eventID = res.redirectedToUrl.match(/de\/groups\/\d+\/events\/(\d+)/)[1]
+        resolve(eventID)
       })
     })
   })
