@@ -1,6 +1,7 @@
 import { create } from '../pageHelpers/event.js'
 import { root_user, jim_knopf_basiskurs as event } from '../support/constants.js'
-import { replace_empty_strings_with_null, get_reset_auto_increment_query } from '../support/helpers.js'
+import { replace_empty_strings_with_null, get_reset_auto_increment_query, fill_form } from '../support/helpers.js'
+import { course_controls } from '../support/controls.js'
 
 const RESET_AUTO_INCREMENT = get_reset_auto_increment_query([ 'Event', 'Event::Date' ])
 
@@ -9,16 +10,12 @@ describe('A course', function () {
     cy.app('clean')
     cy.appEval(RESET_AUTO_INCREMENT) // auto increment values are not reset by transactions
     cy.app('start_transaction')
-  	cy.login(root_user.username, root_user.password)
+    cy.login(root_user.email, root_user.password)
 
     cy.visit('/de/groups/1/events/course')
     cy.contains('Kurs erstellen').click()
     cy.contains('Speichern').should('be.visible')
-    cy.nearestInput('Name').focus().clear().type(event.required_fields['name'])
-    cy.nearestInput('Kursnummer').focus().clear().type(event.required_fields['number'])
-    cy.nearestInput('Kursart').select('BKPS (Basiskurs Pfadistufe)')
-    cy.get('.nav-tabs').contains('Daten').click()
-    cy.nearestInput('Von').focus().clear().type(event.required_fields['dates_attributes][0][start_at_date'])
+    fill_form(course_controls, event.required_fields)
     cy.contains('Speichern').first().click()
     cy.contains(`Anlass ${event.required_fields['name']} wurde erfolgreich erstellt.`).should('be.visible')
 
@@ -32,7 +29,7 @@ describe('A course', function () {
     cy.appEval(RESET_AUTO_INCREMENT)
     cy.app('start_transaction')
 
-    cy.login(root_user.username, root_user.password)
+    cy.login(root_user.email, root_user.password)
 
     create(1, event.required_fields)
 

@@ -1,5 +1,10 @@
 export const root_user = {
-  username: 'hitobito-pbs@puzzle.ch',
+  email: 'hitobito-pbs@puzzle.ch',
+  password: 'hito42bito'
+}
+
+export const kunz_user = {
+  email: 'kunz@puzzle.ch',
   password: 'hito42bito'
 }
 

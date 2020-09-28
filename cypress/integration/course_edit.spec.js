@@ -1,11 +1,12 @@
 import { edit } from '../pageHelpers/event.js'
 import { root_user, jim_knopf_basiskurs as event } from '../support/constants.js'
-import { replace_empty_strings_with_null } from '../support/helpers.js'
+import { replace_empty_strings_with_null, fill_form } from '../support/helpers.js'
 import { GET_COURSE } from '../support/queries.js'
+import { course_controls } from '../support/controls.js'
 
 describe('A course', function () {
   it('can be edited via the UI or a request, the result is the same', function () {
-    cy.login(root_user.username, root_user.password)
+    cy.login(root_user.email, root_user.password)
     cy.appEval(GET_COURSE).then(res => {
       const url = `/de/groups/${res.group_id}/events/${res.event_id}`
       cy.wrap(url).as('event_url')
@@ -13,16 +14,7 @@ describe('A course', function () {
       cy.visit(`${url}/edit`)
     })
 
-    cy.nearestInput('Ort / Adresse').focus().clear().type(event.additional_fields['location'])
-    cy.nearestInput('Status').select('Offen zur Anmeldung')
-    cy.nearestInput('Motto').focus().clear().type(event.additional_fields['motto'])
-    cy.get('.nav-tabs').contains('Anmeldung').click()
-    cy.nearestInput('Anmeldebeginn').focus().clear().type(event.additional_fields['application_opening_at'])
-    cy.nearestInput('Anmeldeschluss').focus().clear().type(event.additional_fields['application_closing_at'])
-    cy.nearestCheckbox('Empfehlung der Anmeldungen nötig durch', 'Abteilung').uncheck()
-    cy.nearestCheckbox('Empfehlung der Anmeldungen nötig durch', 'Region').check()
-    cy.nearestCheckbox('Empfehlung der Anmeldungen nötig durch', 'Kantonalverband').check()
-    cy.nearestCheckbox('Empfehlung der Anmeldungen nötig durch', 'Bundesebene').uncheck()
+    fill_form(course_controls, event.additional_fields)
     cy.contains('Speichern').first().click()
 
     cy.get('@event_url').then((url) => {
@@ -32,7 +24,7 @@ describe('A course', function () {
     cy.app('clean')
     cy.app('start_transaction')
 
-    cy.login(root_user.username, root_user.password)
+    cy.login(root_user.email, root_user.password)
 
     cy.get('@event_id').then((id) => {
       edit(id, event.additional_fields)

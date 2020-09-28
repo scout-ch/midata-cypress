@@ -65,6 +65,11 @@ Cypress.Commands.add("getCSRFToken", () => {
   })
 })
 
+const escapeRegExp = (string) => {
+  const escaped = string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') // $& means the whole matched string
+  return new RegExp(`^${escaped}$`)
+}
+
 /**
  * Finds the checkbox which is nearest to the given label in the UI. Supports multiple checkboxes
  * grouped together by specifying the checkbox label.
@@ -82,9 +87,9 @@ Cypress.Commands.add('nearestCheckbox', { prevSubject: 'optional'}, (subject, la
   })
   let base
   if (subject) {
-    base = cy.wrap(subject, { log: false }).contains(label, { log: false })
+    base = cy.wrap(subject, { log: false }).contains(escapeRegExp(label), { log: false })
   } else {
-    base = cy.contains(label, { log: false })
+    base = cy.contains(escapeRegExp(label), { log: false })
   }
   return base.closest('.control-group', { log: false }).contains(checkbox_label, { log: false }).find('input[type="checkbox"]', { log: false }).first({ log: false })
 })
@@ -100,9 +105,9 @@ Cypress.Commands.add('nearestInput', { prevSubject: 'optional'}, (subject, label
   })
   let base
   if (subject) {
-    base = cy.wrap(subject, { log: false }).contains(label, { log: false })
+    base = cy.wrap(subject, { log: false }).contains(escapeRegExp(label), { log: false })
   } else {
-    base = cy.contains(label, { log: false })
+    base = cy.contains(escapeRegExp(label), { log: false })
   }
   return base.closest('.control-group', { log: false }).find('input:not([type="hidden"]), textarea, select', { log: false }).first({ log: false })
 })

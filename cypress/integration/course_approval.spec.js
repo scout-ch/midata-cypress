@@ -10,12 +10,14 @@ import {
   JSON_APPROVAL,
   GET_NAME
 } from '../support/queries.js'
+import { fill_form } from '../support/helpers.js'
+import { course_approval_controls } from '../support/controls.js'
 
 describe('Course approvals', function () {
 
   beforeEach(() => {
-		cy.login(root_user.username, root_user.password)
-	})
+    cy.login(root_user.email, root_user.password)
+  })
 
   it('can be issued via the UI or a request, the result is the same', function () {
     cy.appEval(GET_COURSE_PARTICIPATION).then(res => {
@@ -25,12 +27,7 @@ describe('Course approvals', function () {
     })
 
     cy.contains('Freigeben').click()
-    cy.nearestInput('Tätigkeit').type('-')
-    cy.nearestInput('Stufe').type('-')
-    cy.nearestInput('Wie bewährt er*sie sich dabei? z.B. Einsatz, Qualität des*der TN').type('-')
-    cy.nearestInput('Wo liegen seine*ihre Stärken?').type('-')
-    cy.nearestInput('Wo sollte man ihn*sie fördern?').type('-')
-    cy.nearestInput('Wünsche, Anregungen oder Bemerkungen an die Kursleitung').type('-')
+    fill_form(course_approval_controls, empty_approval)
     cy.contains('Freigeben').last().click()
 
     cy.get('@participation_id').then((participation_id) => {
@@ -40,7 +37,7 @@ describe('Course approvals', function () {
     cy.app('clean')
     cy.app('start_transaction')
 
-    cy.login(root_user.username, root_user.password)
+    cy.login(root_user.email, root_user.password)
 
     cy.get('@participation_id').then((participation_id) => {
       approve(this.event_id, participation_id, empty_approval)

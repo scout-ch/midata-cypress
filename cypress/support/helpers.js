@@ -33,3 +33,45 @@ export const get_reset_auto_increment_query = (entities) => {
   })
   return query
 }
+
+export const fill_form = (controls, fields) => {
+  const fields_keys = Object.keys(fields)
+  const filtered_controls = controls.map(tab => {
+    tab['controls'] = tab.controls.filter(control => {
+      let keep = false
+      control.type === 'checkbox' ?
+      Object.keys(control.keys).forEach(key => {
+        keep = keep || fields_keys.includes(key)
+      }) :
+      keep = keep || Object.keys(fields).includes(control.key)
+      return keep
+    })
+    return tab
+  })
+  filtered_controls.forEach(tab => {
+    tab.tab_name && cy.get('.nav-tabs').contains(tab.tab_name).click()
+    tab.controls.forEach(control => {
+      switch(control.type) {
+        case 'input':
+          cy.nearestInput(control.label).focus().clear().type(fields[control.key])
+          break
+        case 'selection':
+          cy.nearestInput(control.label).select(control.options[fields[control.key]])
+          break
+        case 'checkbox':
+          Object.keys(control.keys).forEach(key => {
+            if (!fields_keys.includes(key)) {
+              return
+            } else if (fields[key] === '0') {
+              cy.nearestCheckbox(control.label, control.keys[key]).uncheck()
+            } else if (fields[key] === '1') {
+              cy.nearestCheckbox(control.label, control.keys[key]).check()
+            }
+          })
+          break
+        default:
+          throw new Error('Unknown control type')
+      }
+    })
+  });
+}

@@ -10,7 +10,7 @@ describe('A course participation', function () {
     cy.app('clean')
     cy.appEval(RESET_AUTO_INCREMENT) // auto increment values are not reset by transactions
     cy.app('start_transaction')
-		cy.login(root_user.username, root_user.password)
+    cy.login(root_user.email, root_user.password)
 
     cy.appEval(GET_COURSE).then(res => {
       const url = `/de/groups/${res.group_id}/events/${res.event_id}`
@@ -45,7 +45,7 @@ describe('A course participation', function () {
     cy.appEval(RESET_AUTO_INCREMENT)
     cy.app('start_transaction')
 
-    cy.login(root_user.username, root_user.password)
+    cy.login(root_user.email, root_user.password)
 
     cy.get('@event_fields').then((fields) => {
       edit(this.event_id, fields)
