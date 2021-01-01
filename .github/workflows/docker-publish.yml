@@ -10,9 +10,9 @@ on:
     tags:
       - v*
 
-    # Automatically rebuild latest tag
-    schedule:
-      - cron: "7 23 * * *"
+  # Automatically rebuild latest tag
+  schedule:
+    - cron: "7 23 * * *"
 
 env:
   # TODO: Change variable to your image's name.
@@ -24,7 +24,6 @@ jobs:
   # See also https://docs.docker.com/docker-hub/builds/
   push:
     runs-on: ubuntu-latest
-    if: github.event_name == 'push'
 
     steps:
       - uses: actions/checkout@v2
