@@ -1,50 +1,63 @@
 version: '3.4'
 
 services:
-  app: &app
-    image: docker.pkg.github.com/scout-ch/midata-cypress/midata-cypress-app:latest
+  rails: &rails
+    image: ghcr.io/scout-ch/midata-cypress/rails:latest
+    restart: always
     build:
-      context: .compose
-      target: app
-    ports:
-      - 3000:3000
+      context: docker
+    command: [ "puma", "-e", "test", "-t", "0:1", "-p", "3000" ]
+    user: "${RAILS_UID:-1000}"
+    tty: true
+    stdin_open: true
     depends_on:
       - db
-      - mail
+      - mailcatcher
       - cache
-      - worker
-    env_file: .compose/app/.env
-    tmpfs: /app/hitobito/tmp/pids
+      - webpack
+    env_file: ./development/docker/rails.env
+    environment:
+      WEBPACKER_DEV_SERVER_HOST: webpack
+    ports:
+      - "3000:3000"
     volumes:
+      - ./development/app/:/usr/src/app
+      - hitobito_bundle:/opt/bundle
       - seed:/seed
-      - ./cypress/app_commands:/app/hitobito/spec/cypress/app_commands
-      - ./cypress/cypress_helper.rb:/app/hitobito/spec/cypress/cypress_helper.rb
-      - ./.compose/cypress/config/initializers/cypress_on_rails.rb:/app/hitobito/config/initializers/cypress_on_rails.rb
+      - ./development/docker/home/rails:/home/developer
+      - /tmp/.X11-unix:/tmp/.X11-unix
+      - ./cypress/app_commands:/usr/src/app/hitobito/spec/cypress/app_commands
+      - ./cypress/cypress_helper.rb:/usr/src/app/hitobito/spec/cypress/cypress_helper.rb
+      - ./docker/cypress/config/initializers/cypress_on_rails.rb:/usr/src/app/hitobito/config/initializers/cypress_on_rails.rb
 
   worker:
-    <<: *app
-    image: docker.pkg.github.com/scout-ch/midata-cypress/midata-cypress-worker:latest
-    build:
-      context: .compose
-      target: worker
+    <<: *rails
+    command: [ 'rails', 'jobs:work' ]
     ports: []
+    entrypoint: ["rails-entrypoint"]
+    environment:
+      SKIP_RAILS_MIGRATIONS: 1
+      SKIP_SEEDS: 1
     depends_on:
-    - db
-    - mail
-    - cache
+      - rails
+      - db
+      - mailcatcher
+      - cache
+      - webpack
       
   cypress: &cypress
     image: cypress/included:6.2.0
     working_dir: /e2e
     environment:
-      - CYPRESS_BASE_URL=http://app:3000
+      - CYPRESS_BASE_URL=${CYPRESS_BASE_URL:-http://rails:3000}
     volumes:
       - ./cypress:/e2e/cypress
       - ./cypress.json:/e2e/cypress.json
-      - .compose/cypress/entrypoint:/bin/entrypoint
+      - ./docker/cypress/entrypoint:/bin/entrypoint
       - /tmp/.X11-unix:/tmp/.X11-unix:rw # For running in Docker on Linux
     depends_on:
-      - app
+      - rails
+      - worker
     entrypoint: 
       - /bin/entrypoint
     command: ["run", "--project", ".", "--browser", "firefox"]
@@ -54,27 +67,68 @@ services:
     command: ["open", "--project", "."]
     environment:
       - DISPLAY
-      - CYPRESS_BASE_URL=http://app:3000
+      - CYPRESS_BASE_URL=${CYPRESS_BASE_URL:-http://rails:3000}
 
   # Dependencies
 
-  mail:
+  mailcatcher:
     image: mailhog/mailhog
+    restart: always
     ports:
       - "1080:8025"
 
   cache:
-    image: memcached:1.5-alpine
+    image: memcached:1.6-alpine
+    restart: always
     command: [ memcached, -l, '0.0.0.0', -p, '11211' ]
 
-  db:
-    image: mysql:5.6
-    command:
-    - --sort_buffer_size=2M
-    env_file: .compose/db/.env
+  sphinx:
+    image: macbre/sphinxsearch:3.1.1
+    command: sphinx-start
+    restart: always
+    depends_on:
+      - db
     volumes:
+      - ./development/docker/sphinx.conf:/opt/sphinx/conf/sphinx.conf:ro
+      - ./development/docker/sphinx-start:/usr/local/bin/sphinx-start:ro
+      - ./development/docker/sphinx-indexer:/usr/local/bin/sphinx-indexer:ro
+      - sphinx_indexes:/opt/sphinx/indexes
+
+  db:
+    image: mysql:5.7
+    restart: always
+    command:
+      - --sort_buffer_size=2M
+    env_file: ./development/docker/mysql.env
+    ports:
+      - "33066:3306"
+    volumes:
+      - ./development/docker/mysql-setup.sql:/docker-entrypoint-initdb.d/mysql-setup.sql:ro
       - db:/var/lib/mysql
-    
+
+  webpack:
+    image: ghcr.io/scout-ch/midata-cypress/rails:latest
+    build:
+      context: docker
+    entrypoint: [ "webpack-entrypoint" ]
+    restart: always
+    env_file: ./development/docker/rails.env
+    environment:
+      WEBPACKER_DEV_SERVER_HOST: webpack
+    user: "${RAILS_UID:-1000}"
+    command: /usr/src/app/hitobito/bin/webpack-dev-server
+    ports:
+      - "3035:3035"
+    volumes:
+      - ./development/app/:/usr/src/app
+      - hitobito_bundle:/opt/bundle
+      - hitobito_yarn_cache:/home/developer/.cache/yarn
+
 volumes:
   db:
   seed:
+  hitobito_bundle:
+    external: true
+  hitobito_yarn_cache:
+    external: true
+  sphinx_indexes:

@@ -10,12 +10,35 @@ jobs:
 
     steps:
     - uses: actions/checkout@v2
+    - uses: actions/checkout@v2
+      with:
+        repository: hitobito/development
+        path: development
+    - uses: actions/checkout@v2
+      with:
+        repository: hitobito/hitobito
+        path: development/app/hitobito
+    - uses: actions/checkout@v2
+      with:
+        repository: hitobito/hitobito_youth
+        path: development/app/hitobito_youth
+    - uses: actions/checkout@v2
+      with:
+        repository: hitobito/hitobito_pbs
+        path: development/app/hitobito_pbs
     - name: Log into registry
-      run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login docker.pkg.github.com -u ${{ github.actor }} --password-stdin
+      run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
     - name: Pull images
-      run: docker-compose pull --include-deps --quiet app
+      run: docker-compose pull --include-deps --quiet rails worker
+      continue-on-error: true
+    - name: Create Cache Volumes
+      run: |
+        docker volume create hitobito_bundle
+        docker volume create hitobito_yarn_cache
     - name: Start hitobito
-      run: docker-compose up -d app
+      run: |
+        export RAILS_UID=$(id -u)
+        docker-compose up -d rails worker
     - name: Run cypress
       uses: cypress-io/github-action@v2
       with:
