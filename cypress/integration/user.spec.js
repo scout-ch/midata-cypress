@@ -11,7 +11,7 @@ describe('The user', function () {
 		cy.get('div.chosen-search input').type("Webma{enter}")
 		cy.get('#new_role button[type=submit]').last().click()
 
-    cy.contains("Rolle Webmaster für Nika Zipp / Voluptate in Pfadibewegung Schweiz wurde erfolgreich erstellt.")
+    cy.contains(/Rolle Webmaster für .* in Pfadibewegung Schweiz wurde erfolgreich erstellt./)
 	})
   it('can add a new person', function () {
     cy.visit('/de/groups/1/roles/new')

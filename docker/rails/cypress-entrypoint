@@ -1,0 +1,8 @@
+#!/bin/bash
+
+set -e
+
+echo "🔧 Injecting cypress-on-rails gem"
+bundle add cypress-on-rails -v 1.5 --skip-install
+
+exec rails-entrypoint "$@"
