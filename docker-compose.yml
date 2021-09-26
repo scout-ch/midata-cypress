@@ -46,7 +46,7 @@ services:
       - webpack
       
   cypress: &cypress
-    image: cypress/included:6.2.0
+    image: cypress/included:8.7.0
     working_dir: /e2e
     environment:
       - CYPRESS_BASE_URL=${CYPRESS_BASE_URL:-http://rails:3000}
@@ -60,7 +60,7 @@ services:
       - worker
     entrypoint: 
       - /bin/entrypoint
-    command: ["run", "--project", ".", "--browser", "firefox"]
+    command: ["run", "--project", "."]
 
   cypress-gui:
     <<: *cypress
